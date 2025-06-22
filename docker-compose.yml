@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  app:
+    image: furkangonulal/nest-app:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    ports:
+      - '3010:3000'
+    env_file: .env
+    networks:
+      - app-network
+
+networks:
+  app-network:
