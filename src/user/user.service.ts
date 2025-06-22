@@ -1,41 +1,36 @@
-import { Injectable,NotFoundException  } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+
 @Injectable()
 export class UserService {
-    // I'll postgres db for this
-  private users = [
-    { id: 1, name: 'Furkan' },
-    { id: 2, name: 'Tayfun' },
-    { id: 3, name: 'Emre' },
-    { id: 4, name: 'Ahmet' },
-  ];
+  constructor(
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
+  ) {}
 
- findAll() {
-    return this.users;
+  findAll() {
+    return this.userRepo.find();
   }
 
   findOne(id: number) {
-    const user = this.users.find((u) => u.id === id);
-    if (!user) throw new NotFoundException(`Kullanıcı bulunamadı: ${id}`);
-    return user;
+    return this.userRepo.findOneBy({ id });
   }
 
   count() {
-    return this.users.length;
-  }
-   create(createUserDto: CreateUserDto) {
-    const newUser = {
-      id: this.users.length + 1, // basit id üretimi
-      ...createUserDto,
-    };
-    this.users.push(newUser);
-    return newUser;
+    return this.userRepo.count();
   }
 
-  delete(id: number) {
-    const index = this.users.findIndex((u) => u.id === id);
-    if (index === -1) throw new NotFoundException(`Kullanıcı bulunamadı: ${id}`);
-    const deleted = this.users.splice(index, 1);
-    return deleted[0];
+  async create(dto: CreateUserDto) {
+    const newUser = this.userRepo.create(dto);
+    return await this.userRepo.save(newUser);
+  }
+
+  async delete(id: number) {
+    const user = await this.userRepo.findOneBy({ id });
+    if (!user) throw new NotFoundException(`Kullanıcı bulunamadı: ${id}`);
+    return this.userRepo.remove(user);
   }
 }
